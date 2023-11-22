@@ -10,4 +10,9 @@ class Admin extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    public function makeToken()
+    {
+        return md5($this->email);
+    }
 }
