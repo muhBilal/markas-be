@@ -16,11 +16,25 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('admin')->group(function () {
-        Route::prefix('admin/auth')->group(function () {
+        Route::prefix('auth')->group(function () {
             Route::post('/login', 'AuthController@admin_login');
             Route::post('/logout', 'AuthController@admin_logout');
         });
 
+        Route::apiResource('/regional', 'RegionalController');
+        Route::apiResource('/event_album', 'EventAlbumController');
+        Route::apiResource('/room_type', 'RoomTypeController');
+        Route::apiResource('/activity_type', 'ActivityTypeController');
+
+        Route::get('/room', 'RoomController@index');
+        Route::post('/room', 'RoomController@store');
+        Route::delete('/room/{id}', 'RoomController@destroy');
+
+        Route::get('/event', 'EventController@index');
+        Route::get('/event/{id}', 'EventController@show');
+        Route::post('/event', 'EventController@store');
+        Route::delete('/event/{id}', 'EventController@destroy');
+        
         Route::prefix('testimonial')->group(function () {
             Route::get('/', 'TestimonialController@index');
             Route::post('/', 'TestimonialController@store');
@@ -43,15 +57,6 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', 'PlaceController@update');
             Route::delete('/{id}', 'PlaceController@destroy');
         });
-
-        Route::prefix('Place')->group(function () {
-            Route::get('/', 'PlaceController@index');
-            Route::post('/', 'PlaceController@store');
-            Route::get('/{id}', 'PlaceController@show');
-            Route::put('/{id}', 'PlaceController@update');
-            Route::delete('/{id}', 'PlaceController@destroy');
-        });
-
 
     });
 });
