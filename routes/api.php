@@ -15,8 +15,28 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    Route::prefix('admin/auth')->group(function () {
-        Route::post('/login', 'AuthController@admin_login');
-        Route::post('/logout', 'AuthController@admin_logout');
+    Route::prefix('admin')->group(function () {
+        Route::prefix('admin/auth')->group(function () {
+            Route::post('/login', 'AuthController@admin_login');
+            Route::post('/logout', 'AuthController@admin_logout');
+        });
+
+        Route::prefix('testimonial')->group(function (){
+            Route::get('/', 'TestimonialController@index');
+            Route::post('/', 'TestimonialController@store');
+            Route::get('/{id}', 'TestimonialController@show');
+            Route::put('/{id}', 'TestimonialController@update');
+            Route::delete('/{id}', 'TestimonialController@destroy');
+        });
+
+        Route::prefix('transaction')->group(function (){
+            Route::get('/', 'TransactionController@index');
+            Route::post('/', 'TransactionController@store');
+            Route::get('/{id}', 'TransactionController@show');
+            Route::delete('/{id}', 'TransactionController@destroy');
+        });
+
+
+
     });
 });
