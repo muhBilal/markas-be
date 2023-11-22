@@ -57,14 +57,14 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
-                "status" => "success",
-                "message" => "Logout Success"
+                'status' => 'success',
+                'message' => 'Logout Success'
             ], 200);
         }
 
         return response()->json([
-            "status" => "error",
-            "message" => "Invalid token"
+            'status' => 'error',
+            'message' => 'Invalid Token'
         ], 401);
     }
 }
