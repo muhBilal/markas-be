@@ -50,7 +50,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'TransactionController@destroy');
         });
 
-        Route::prefix('Place')->group(function () {
+        Route::prefix('place')->group(function () {
             Route::get('/', 'PlaceController@index');
             Route::post('/', 'PlaceController@store');
             Route::get('/{id}', 'PlaceController@show');
