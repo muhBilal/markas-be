@@ -28,7 +28,6 @@ class TransactionController extends Controller
             'activity_type' => 'required',
             'activity_name' => 'required',
             'short_desc' => 'required',
-            'payment_img' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -47,7 +46,6 @@ class TransactionController extends Controller
             'activity_type' => $request->activity_type,
             'activity_name' => $request->activity_name,
             'short_desc' => $request->short_desc,
-            'payment_img' => $request->payment_img,
             'status' => true,
         ]);
 
