@@ -9,4 +9,9 @@ class Testimonial extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+
+    public function place()
+    {
+        return $this->belongsTo(Place::class);
+    }
 }

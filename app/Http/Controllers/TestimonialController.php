@@ -10,7 +10,7 @@ class TestimonialController extends Controller
 {
     public function index()
     {
-        $testimonials = Testimonial::all();
+        $testimonials = Testimonial::with('place')->get();
         return response()->json([
             'status' => 'success',
             'data' => $testimonials
@@ -49,13 +49,13 @@ class TestimonialController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Testimonial Created',
-            'data' => $testimonial
+            'data' => $testimonial->load('place')
         ], 201);
     }
 
     public function show($id)
     {
-        $testimonial = Testimonial::find($id);
+        $testimonial = Testimonial::with('place')->find($id);
 
         if (!$testimonial) {
             return response()->json([

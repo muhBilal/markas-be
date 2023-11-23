@@ -6,6 +6,7 @@ use App\Models\LocationNearestArea;
 use App\Models\Place;
 use App\Models\PlaceFacility;
 use App\Models\PlaceImage;
+use App\Models\PlaceRoom;
 use App\Models\PlaceTag;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class PlaceController extends Controller
 {
     public function index()
     {
-        $places = Place::all();
+        $places = Place::with(['regional', 'facilities', 'images', 'rooms', 'tags', 'location_nearest_areas'])->get();
 
         return response()->json([
             'status' => 'success',
@@ -26,11 +27,7 @@ class PlaceController extends Controller
 
     public function show($id)
     {
-        $place = Place::find($id);
-        $placeImages = PlaceImage::where('place_id', $id)->get();
-        $placeTags = PlaceTag::where('place_id', $id)->get();
-        $placeFacilities = PlaceFacility::where('place_id', $id)->get();
-        $locationNarest = LocationNearestArea::where('place_id', $id)->get();
+        $place = Place::with(['regional', 'facilities', 'images', 'rooms', 'tags', 'location_nearest_areas'])->find($id);
 
         if (!$place) {
             return response()->json([
@@ -43,13 +40,7 @@ class PlaceController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Place found successfully',
-            'data' => [
-                'place' => $place,
-                'placeImages' => $placeImages,
-                'placeTags' => $placeTags,
-                'placeFacilities' => $placeFacilities,
-                'locationNarest' => $locationNarest
-            ]
+            'data' => $place
         ], 200);
     }
 
@@ -61,21 +52,11 @@ class PlaceController extends Controller
             'address' => 'required',
             'price' => 'required',
             'address_url' => 'required',
-            'tags' => 'required|array',
-            'tags.*.id' => 'required',
-            'tags.*.name' => 'required',
             'place_images' => 'required|array',
-            'place_images.*.id' => 'required',
-            'place_images.*.place_id' => 'required',
-            'place_images.*.image' => 'required',
             'place_facilities' => 'required|array',
-            'place_facilities.*.id' => 'required',
-            'place_facilities.*.place_id' => 'required',
-            'place_facilities.*.name' => 'required',
             'place_tags' => 'required|array',
-            'place_tags.*.id' => 'required',
-            'place_tags.*.place_id' => 'required',
-            'place_tags.*.tag_id' => 'required',
+            'place_rooms' => 'required|array',
+            'location_nearest_areas' => 'required|array',
         ]);
 
         if ($validator->fails()) {
@@ -96,42 +77,50 @@ class PlaceController extends Controller
                 'address_url' => $request->address_url,
             ]);
 
-            if ($request->has('tags')) {
-                foreach ($request->tags as $tagData) {
-                    $tag = Tag::create([
-                        'id' => $tagData['id'],
-                        'name' => $tagData['name'],
-                    ]);
-                    $place->tags()->attach($tag->id);
-                }
-            }
-
             if ($request->has('place_images')) {
-                foreach ($request->place_images as $imageData) {
-                    $placeImage = PlaceImage::create([
-                        'id' => $imageData['id'],
+                foreach ($request->file('place_images') as $key => $place_image) {
+                    $place_image_path = $place_image->store('place-images');
+                    PlaceImage::create([
                         'place_id' => $place->id,
-                        'image' => $imageData['image'],
+                        'image' => $place_image_path,
                     ]);
                 }
             }
 
             if ($request->has('place_facilities')) {
                 foreach ($request->place_facilities as $facilityData) {
-                    $placeFacility = PlaceFacility::create([
-                        'id' => $facilityData['id'],
+                    PlaceFacility::create([
                         'place_id' => $place->id,
-                        'name' => $facilityData['name'],
+                        'name' => $facilityData,
                     ]);
                 }
             }
 
             if ($request->has('place_tags')) {
                 foreach ($request->place_tags as $placeTagData) {
-                    $placeTag = PlaceTag::create([
-                        'id' => $placeTagData['id'],
+                    PlaceTag::create([
                         'place_id' => $place->id,
-                        'tag_id' => $placeTagData['tag_id'],
+                        'tag_id' => $placeTagData,
+                    ]);
+                }
+            }
+
+            if ($request->has('place_rooms')) {
+                foreach ($request->place_rooms as $placeRoomData) {
+                    PlaceRoom::create([
+                        'place_id' => $place->id,
+                        'room_id' => $placeRoomData,
+                    ]);
+                }
+            }
+
+            if ($request->has('location_nearest_areas')) {
+                foreach ($request->location_nearest_areas as $locationNearestAreaData) {
+                    LocationNearestArea::create([
+                        'place_id' => $place->id,
+                        'name' => $locationNearestAreaData['name'],
+                        'desc' => $locationNearestAreaData['desc'],
+                        'time' => $locationNearestAreaData['time'],
                     ]);
                 }
             }
@@ -141,6 +130,7 @@ class PlaceController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Place created successfully',
+                'data' => $place->load(['regional', 'facilities', 'images', 'rooms', 'tags', 'location_nearest_areas'])
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -150,150 +140,5 @@ class PlaceController extends Controller
                 'message' => 'Failed to store data. ' . $e->getMessage()
             ], 500);
         }
-    }
-
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'regional_id' => 'required',
-            'title' => 'required',
-            'address' => 'required',
-            'price' => 'required',
-            'address_url' => 'required',
-            'tags' => 'required|array',
-            'tags.*.id' => 'required',
-            'tags.*.name' => 'required',
-            'place_images' => 'required|array',
-            'place_images.*.id' => 'required',
-            'place_images.*.place_id' => 'required',
-            'place_images.*.image' => 'required',
-            'place_facilities' => 'required|array',
-            'place_facilities.*.id' => 'required',
-            'place_facilities.*.place_id' => 'required',
-            'place_facilities.*.name' => 'required',
-            'place_tags' => 'required|array',
-            'place_tags.*.id' => 'required',
-            'place_tags.*.place_id' => 'required',
-            'place_tags.*.tag_id' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $place = Place::findOrFail($id);
-            $place->update([
-                'regional_id' => $request->regional_id,
-                'title' => $request->title,
-                'address' => $request->address,
-                'price' => $request->price,
-                'address_url' => $request->address_url,
-            ]);
-
-            $placeTags = PlaceTag::where('place_id', $id)->get();
-            $tagIds = $placeTags->pluck('tag_id')->toArray();
-            Tag::whereIn('id', $tagIds)->delete();
-            PlaceImage::where('place_id', $id)->delete();
-            PlaceFacility::where('place_id', $id)->delete();
-            $placeTags->delete();
-            $place->location_nearest_area;
-
-            if ($request->has('tags')) {
-                foreach ($request->tags as $tagData) {
-                    $tag = Tag::create([
-                        'id' => $tagData['id'],
-                        'name' => $tagData['name'],
-                    ]);
-                    $place->tags()->attach($tag->id);
-                }
-            }
-
-            if ($request->has('place_images')) {
-                foreach ($request->place_images as $imageData) {
-                    $placeImage = PlaceImage::create([
-                        'id' => $imageData['id'],
-                        'place_id' => $place->id,
-                        'image' => $imageData['image'],
-                    ]);
-                }
-            }
-
-            if ($request->has('place_facilities')) {
-                foreach ($request->place_facilities as $facilityData) {
-                    $placeFacility = PlaceFacility::create([
-                        'id' => $facilityData['id'],
-                        'place_id' => $place->id,
-                        'name' => $facilityData['name'],
-                    ]);
-                }
-            }
-
-            if ($request->has('place_tags')) {
-                foreach ($request->place_tags as $placeTagData) {
-                    $placeTag = PlaceTag::create([
-                        'id' => $placeTagData['id'],
-                        'place_id' => $place->id,
-                        'tag_id' => $placeTagData['tag_id'],
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Place updated successfully'
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update data. ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function destroy($id)
-    {
-        $place = Place::find($id);
-
-        if (!$place) {
-            return response()->json([
-                'status' => '404',
-                'message' => 'Not Found',
-                'data' => null
-            ], 404);
-        }
-
-        try {
-            DB::beginTransaction();
-            $placeTags = PlaceTag::where('place_id', $id)->get();
-            $tagIds = $placeTags->pluck('tag_id')->toArray();
-            Tag::whereIn('id', $tagIds)->delete();
-            PlaceImage::where('place_id', $id)->delete();
-            PlaceFacility::where('place_id', $id)->delete();
-            $placeTags->delete();
-            $place->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to delete data. ' . $e->getMessage()
-            ], 500);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Place deleted successfully',
-            'data' => null
-        ], 200);
     }
 }
