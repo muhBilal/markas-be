@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('activity_type');
             $table->string('activity_name');
             $table->text('short_desc');
-            $table->string('payment_img');
+            $table->string('payment_img')->nullable();
             $table->boolean('status')->default(false);
             $table->timestamps();
         });

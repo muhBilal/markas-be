@@ -13,9 +13,10 @@ class RegionalController extends Controller
      */
     public function index()
     {
+        $regionals = Regional::all();
         return response()->json([
-            'success' => true,
-            'data'    => Regional::all()
+            'status' => 'success',
+            'data'    => $regionals
         ], 200);
     }
 

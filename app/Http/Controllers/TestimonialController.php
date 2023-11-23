@@ -12,8 +12,7 @@ class TestimonialController extends Controller
     {
         $testimonials = Testimonial::all();
         return response()->json([
-            'status' => '200',
-            'message' => 'Success',
+            'status' => 'success',
             'data' => $testimonials
         ], 200);
     }
@@ -72,7 +71,8 @@ class TestimonialController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $testimonial = Testimonial::find($id);
 
         if (!$testimonial) {
@@ -116,7 +116,8 @@ class TestimonialController extends Controller
         ], 200);
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $testimonial = Testimonial::find($id);
 
         if (!$testimonial) {

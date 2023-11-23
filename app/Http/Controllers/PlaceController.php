@@ -9,6 +9,7 @@ use App\Models\PlaceImage;
 use App\Models\PlaceTag;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PlaceController extends Controller
@@ -18,8 +19,7 @@ class PlaceController extends Controller
         $places = Place::all();
 
         return response()->json([
-            'status' => '200',
-            'message' => 'Success',
+            'status' => 'success',
             'data' => $places
         ], 200);
     }
@@ -34,15 +34,15 @@ class PlaceController extends Controller
 
         if (!$place) {
             return response()->json([
-                'status' => '404',
+                'status' => 'error',
                 'message' => 'Not Found',
                 'data' => null
             ], 404);
         }
 
         return response()->json([
-            'status' => '200',
-            'message' => 'Success',
+            'status' => 'success',
+            'message' => 'Place found successfully',
             'data' => [
                 'place' => $place,
                 'placeImages' => $placeImages,
@@ -86,7 +86,7 @@ class PlaceController extends Controller
         }
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             $place = Place::create([
                 'regional_id' => $request->regional_id,
@@ -136,14 +136,14 @@ class PlaceController extends Controller
                 }
             }
 
-            \DB::commit();
+            DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data successfully stored.'
-            ], 201);
+                'message' => 'Place created successfully',
+            ], 200);
         } catch (\Exception $e) {
-            \DB::rollback();
+            DB::rollback();
 
             return response()->json([
                 'status' => 'error',
@@ -185,7 +185,7 @@ class PlaceController extends Controller
         }
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             $place = Place::findOrFail($id);
             $place->update([
@@ -244,18 +244,20 @@ class PlaceController extends Controller
                 }
             }
 
-            \DB::commit();
+            DB::commit();
 
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Place updated successfully'
+            ], 200);
         } catch (\Exception $e) {
-            \DB::rollback();
+            DB::rollback();
 
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to update data. ' . $e->getMessage()
             ], 500);
         }
-
-
     }
 
     public function destroy($id)
@@ -271,7 +273,7 @@ class PlaceController extends Controller
         }
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             $placeTags = PlaceTag::where('place_id', $id)->get();
             $tagIds = $placeTags->pluck('tag_id')->toArray();
             Tag::whereIn('id', $tagIds)->delete();
@@ -279,9 +281,9 @@ class PlaceController extends Controller
             PlaceFacility::where('place_id', $id)->delete();
             $placeTags->delete();
             $place->delete();
-            \DB::commit();
+            DB::commit();
         } catch (\Exception $e) {
-            \DB::rollback();
+            DB::rollback();
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to delete data. ' . $e->getMessage()
@@ -289,8 +291,8 @@ class PlaceController extends Controller
         }
 
         return response()->json([
-            'status' => '200',
-            'message' => 'Success',
+            'status' => 'success',
+            'message' => 'Place deleted successfully',
             'data' => null
         ], 200);
     }

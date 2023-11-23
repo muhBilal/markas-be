@@ -12,8 +12,7 @@ class TransactionController extends Controller
     {
         $transactions = Transaction::all();
         return response()->json([
-            'status' => '200',
-            'message' => 'Success',
+            'status' => 'success',
             'data' => $transactions
         ], 200);
     }
@@ -49,7 +48,7 @@ class TransactionController extends Controller
             'activity_name' => $request->activity_name,
             'short_desc' => $request->short_desc,
             'payment_img' => $request->payment_img,
-            'status' => True,
+            'status' => true,
         ]);
 
         return response()->json([
@@ -60,7 +59,8 @@ class TransactionController extends Controller
     }
 
 
-    public function show($id){
+    public function show($id)
+    {
         $transaction = Transaction::find($id);
 
         if (!$transaction) {
@@ -77,7 +77,8 @@ class TransactionController extends Controller
         ], 200);
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $transaction = Transaction::find($id);
 
         if (!$transaction) {
@@ -94,5 +95,4 @@ class TransactionController extends Controller
             'message' => 'Transaction Deleted',
         ], 200);
     }
-
 }
