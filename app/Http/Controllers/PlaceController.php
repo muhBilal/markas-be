@@ -17,7 +17,7 @@ class PlaceController extends Controller
 {
     public function index()
     {
-        $places = Place::with(['regional', 'facilities', 'images', 'rooms', 'tags', 'location_nearest_areas'])->get();
+        $places = Place::with(['regional', 'facilities', 'images', 'rooms.room_type', 'tags', 'location_nearest_areas'])->get();
 
         return response()->json([
             'status' => 'success',
