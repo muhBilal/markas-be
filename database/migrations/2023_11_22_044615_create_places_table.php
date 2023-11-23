@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('title')->unique();
             $table->string('address');
             $table->integer('price');
-            $table->string('address_url');
+            $table->text('address_url');
             $table->timestamps();
         });
     }
